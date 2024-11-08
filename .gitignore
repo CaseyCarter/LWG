@@ -12,8 +12,11 @@
 /bin/list_issues
 /bin/set_status.exe
 /bin/set_status
+/build
+/out
 /src/*.[do]
 /mailing
+/.vs
 /.vscode
 .DS_Store
 R*-mailing.zip
