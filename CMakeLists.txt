@@ -7,10 +7,12 @@ project(lwg)
 set(mailing_directory ${CMAKE_CURRENT_SOURCE_DIR}/mailing)
 
 # Tell MSVC to behave
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8;/Zc:__cplusplus;$<$<VERSION_LESS:$<TARGET_PROPERTY:CXX_STANDARD>,20>:/permissive->>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8;/Zc:__cplusplus;\
+$<$<VERSION_LESS:$<TARGET_PROPERTY:CXX_STANDARD>,20>:/permissive->>")
 
 # Enable ASan (and UBSan with non-MSVC) for Debug builds
-set(sanitizer_options "$<$<CONFIG:Debug>:-fsanitize=address$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:$<COMMA>undefined>>")
+set(sanitizer_options "$<$<CONFIG:Debug>:\
+-fsanitize=address$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:$<COMMA>undefined>>")
 add_compile_options(${sanitizer_options})
 add_link_options(${sanitizer_options})
 
@@ -38,8 +40,8 @@ add_library(lwg
     src/date.cpp src/issues.cpp src/mailing_info.cpp src/metadata.cpp
     src/report_generator.cpp src/sections.cpp src/status.cpp)
 target_sources(lwg PUBLIC FILE_SET headers TYPE HEADERS BASE_DIRS src
-    FILES src/date.h src/html_utils.h src/issues.h src/mailing_info.h src/metadata.h
-          src/report_generator.h src/sections.h src/status.h)
+    FILES src/date.h src/html_utils.h src/issues.h src/mailing_info.h
+          src/metadata.h src/report_generator.h src/sections.h src/status.h)
 target_compile_features(lwg PUBLIC cxx_std_17)
 
 add_executable(list_issues src/list_issues.cpp)
@@ -57,13 +59,20 @@ target_link_libraries(set_status lwg)
 add_executable(toc_diff src/toc_diff.cpp)
 target_link_libraries(toc_diff lwg)
 
-# Utility targets
+### Utility targets
+add_custom_target(build_lists lists DEPENDS lists mailing
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_custom_target(distclean DEPENDS clean COMMAND cmake -E rm -rf ${mailing_directory})
+
+add_custom_target(lint
+    find xml -name 'issue*.xml' -print0 |
+        xargs -0 -P 4 -n 128 xmllint --noout --nowarning --dtdvalid xml/lwg-issue.dtd
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_custom_target(pgms DEPENDS lists section_data toc_diff list_issues set_status)
 
-add_custom_target(history COMMAND lists revision history DEPENDS lists WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_custom_target(history lists revision history DEPENDS lists
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_custom_target(mailing COMMAND ${CMAKE_COMMAND} -E make_directory ${mailing_directory})
-
-add_custom_target(build_lists COMMAND lists DEPENDS lists mailing WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_custom_target(mailing ${CMAKE_COMMAND} -E make_directory ${mailing_directory})
