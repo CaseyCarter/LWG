@@ -43,6 +43,9 @@ jobs:
       with:
         fetch-depth: 1
 
+    - name: Get cmake/ninja
+      uses: lukka/get-cmake@latest
+
     - name: Prepare build
       run: cmake -B out -G Ninja
 
@@ -60,6 +63,9 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 1
+
+      - name: Get cmake/ninja
+      uses: lukka/get-cmake@latest
 
     - name: Prepare build
       run: cmake -B out -G Ninja
