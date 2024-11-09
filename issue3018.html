@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Issue 3018: shared_ptr of function type</title>
+<meta property="og:title" content="Issue 3018: shared_ptr of function type">
+<meta property="og:description" content="C++ library issue. Status: C++20">
+<meta property="og:url" content="https://cplusplus.github.io/LWG/issue3018.html">
+<meta property="og:type" content="website">
+<meta property="og:image" content="http://cplusplus.github.io/LWG/images/cpp_logo.png">
+<meta property="og:image:alt" content="C++ logo">
+<style>
+  p {text-align:justify}
+  li {text-align:justify}
+  pre code.backtick::before { content: "`" }
+  pre code.backtick::after { content: "`" }
+  blockquote.note
+  {
+    background-color:#E0E0E0;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+  }
+  ins {background-color:#A0FFA0}
+  del {background-color:#FFA0A0}
+  table.issues-index { border: 1px solid; border-collapse: collapse; }
+  table.issues-index th { text-align: center; padding: 4px; border: 1px solid; }
+  table.issues-index td { padding: 4px; border: 1px solid; }
+  table.issues-index td:nth-child(1) { text-align: right; }
+  table.issues-index td:nth-child(2) { text-align: left; }
+  table.issues-index td:nth-child(3) { text-align: left; }
+  table.issues-index td:nth-child(4) { text-align: left; }
+  table.issues-index td:nth-child(5) { text-align: center; }
+  table.issues-index td:nth-child(6) { text-align: center; }
+  table.issues-index td:nth-child(7) { text-align: left; }
+  table.issues-index td:nth-child(5) span.no-pr { color: red; }
+  @media (prefers-color-scheme: dark) {
+     html {
+        color: #ddd;
+        background-color: black;
+     }
+     ins {
+        background-color: #225522
+     }
+     del {
+        background-color: #662222
+     }
+     a {
+        color: #6af
+     }
+     a:visited {
+        color: #6af
+     }
+     blockquote.note
+     {
+        background-color: rgba(255, 255, 255, .10)
+     }
+  }
+</style>
+</head>
+<body>
+<hr>
+<p><em>This page is a snapshot from the LWG issues list, see the <a href="lwg-active.html">Library Active Issues List</a> for more information and the meaning of <a href="lwg-active.html#C++20">C++20</a> status.</em></p>
+<h3 id="3018"><a href="lwg-defects.html#3018">3018</a>. <code>shared_ptr</code> of function type</h3>
+<p><b>Section:</b> 20.3.2.2 <a href="https://wg21.link/util.smartptr.shared">[util.smartptr.shared]</a> <b>Status:</b> <a href="lwg-active.html#C++20">C++20</a>
+ <b>Submitter:</b> Agust&iacute;n K-ballo Berg&eacute; <b>Opened:</b> 2017-09-13 <b>Last modified:</b> 2021-02-25</p>
+<p><b>Priority: </b>3
+</p>
+<p><b>View all other</b> <a href="lwg-index.html#util.smartptr.shared">issues</a> in [util.smartptr.shared].</p>
+<p><b>View all issues with</b> <a href="lwg-status.html#C++20">C++20</a> status.</p>
+<p><b>Discussion:</b></p>
+<p>
+<code>shared_ptr</code> has been designed to support use cases where it owns a pointer to function, and whose deleter 
+does something with it. This can be used, for example, to keep a dynamic library loaded for as long as their exported 
+functions are referenced.
+<p/>
+Implementations have overlooked that the <code>T</code> in <code>shared_ptr&lt;T&gt;</code> can be a function type. It isn't 
+immediately obvious from the standard, and it's not possible to tell from the wording that this is intentional.
+</p>
+
+<p><i>[2017-11 Albuquerque Wednesday night issues processing]</i></p>
+
+<p>Priority set to 3</p>
+
+<p><strong>Previous resolution [SUPERSEDED]:</strong></p>
+<blockquote class="note">
+<p>This wording is relative to <a href="https://wg21.link/n4687">N4687</a>.</p>
+
+<ol>
+<li><p>Edit 20.3.2.2 <a href="https://wg21.link/util.smartptr.shared">[util.smartptr.shared]</a> as indicated:</p>
+<blockquote>
+<p>
+[&hellip;]
+<p/>
+-2- Specializations of <code>shared_ptr</code> shall be <code>CopyConstructible</code>, <code>CopyAssignable</code>, and 
+<code>LessThanComparable</code>, allowing their use in standard containers. Specializations of <code>shared_ptr</code> shall be 
+contextually convertible to <code>bool</code>, allowing their use in boolean expressions and declarations in conditions. 
+<del>The template parameter <code>T</code> of <code>shared_ptr</code> may be an incomplete type.</del>
+<p/>
+<ins>-?- The template parameter <code>T</code> of <code>shared_ptr</code> may be an incomplete type. <code>T*</code> shall be an object 
+pointer type or a function pointer type.</ins>
+<p/>
+[&hellip;]
+</p>
+</blockquote>
+</li>
+</ol>
+</blockquote>
+
+<p><i>[2020-02-13; Prague]</i></p>
+
+<p>
+LWG would prefer to make the new constraint a Mandates-like thing.
+</p>
+
+<p><strong>Original resolution [SUPERSEDED]:</strong></p>
+<blockquote class = "note">
+<p>This wording is relative to <a href="https://wg21.link/n4849">N4849</a>.</p>
+
+<ol>
+<li><p>Edit 20.3.2.2 <a href="https://wg21.link/util.smartptr.shared">[util.smartptr.shared]</a> as indicated:</p>
+<blockquote>
+<p>
+[&hellip;]
+<p/>
+-2- Specializations of <code>shared_ptr</code> shall be <i>Cpp17CopyConstructible</i>, <i>Cpp17CopyAssignable</i>, and 
+<i>Cpp17LessThanComparable</i>, allowing their use in standard containers. Specializations of <code>shared_ptr</code> shall be 
+contextually convertible to <code>bool</code>, allowing their use in boolean expressions and declarations in conditions. 
+<del>The template parameter <code>T</code> of <code>shared_ptr</code> may be an incomplete type.</del>
+<p/>
+<ins>-?- The template parameter <code>T</code> of <code>shared_ptr</code> may be an incomplete type. The program is ill-formed
+unless <code>T*</code> is an object pointer type or a function pointer type.</ins>
+<p/>
+[&hellip;]
+</p>
+</blockquote>
+</li>
+</ol>
+</blockquote>
+
+<p><i>[2020-02 Friday AM discussion in Prague.]</i></p>
+
+<p>Marshall provides updated wording; status to Immediate</p>
+
+
+<p id="res-3018"><b>Proposed resolution:</b></p>
+<p>This wording is relative to <a href="https://wg21.link/n4849">N4849</a>.</p>
+
+<ol>
+<li><p>Edit 20.3.2.2 <a href="https://wg21.link/util.smartptr.shared">[util.smartptr.shared]</a> as indicated:</p>
+<blockquote>
+<p>
+[&hellip;]
+<p/>
+-2- Specializations of <code>shared_ptr</code> shall be <i>Cpp17CopyConstructible</i>, <i>Cpp17CopyAssignable</i>, and 
+<i>Cpp17LessThanComparable</i>, allowing their use in standard containers. Specializations of <code>shared_ptr</code> shall be 
+contextually convertible to <code>bool</code>, allowing their use in boolean expressions and declarations in conditions. 
+<del>The template parameter <code>T</code> of <code>shared_ptr</code> may be an incomplete type.</del>
+<p/>
+<ins>-?- The template parameter <code>T</code> of <code>shared_ptr</code> may be an incomplete type.
+[<i>Note:</i> T may be a function type. <i>-- end note</i>]</ins>
+<p/>
+[&hellip;]
+</p>
+</blockquote>
+</li>
+</ol>
+
+
+
+
+
+</body>
+</html>
