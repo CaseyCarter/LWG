@@ -64,7 +64,7 @@ jobs:
       with:
         fetch-depth: 1
 
-      - name: Get cmake/ninja
+    - name: Get cmake/ninja
       uses: lukka/get-cmake@latest
 
     - name: Prepare build
