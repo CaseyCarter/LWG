@@ -43,11 +43,14 @@ jobs:
       with:
         fetch-depth: 1
 
-    - name: Get cmake/ninja
+    - name: Setup cmake and ninja
       uses: lukka/get-cmake@latest
 
     - name: Prepare build
       run: cmake -B out -G Ninja
+
+    - name: Setup xmllint
+      uses: Bpolitycki/setup-xmllint-action@1.0.1
 
     - name: XML validation
       run: cmake --build out -t lint
@@ -64,7 +67,7 @@ jobs:
       with:
         fetch-depth: 1
 
-    - name: Get cmake/ninja
+    - name: Setup cmake and ninja
       uses: lukka/get-cmake@latest
 
     - name: Prepare build
