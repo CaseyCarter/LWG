@@ -2,14 +2,39 @@ cmake_minimum_required(VERSION 3.28)
 
 project(lwg)
 
-# MSVC needs `/permissive-` only with C++17
-add_compile_options($<$<AND:$<CXX_COMPILER_ID:MSVC>,$<VERSION_LESS:$<TARGET_PROPERTY:CXX_STANDARD>,20>>:/permissive->)
+### Configuration
 
 set(mailing_directory ${CMAKE_CURRENT_SOURCE_DIR}/mailing)
 
-add_custom_target(distclean DEPENDS clean COMMAND cmake -E rm -rf ${mailing_directory}) # FIXME: incomplete
+# Tell MSVC to behave
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8;/Zc:__cplusplus;$<$<VERSION_LESS:$<TARGET_PROPERTY:CXX_STANDARD>,20>:/permissive->>")
 
-add_library(lwg OBJECT
+# Enable ASan (and UBSan with non-MSVC) for Debug builds
+set(sanitizer_options "$<$<CONFIG:Debug>:-fsanitize=address$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:$<COMMA>undefined>>")
+add_compile_options(${sanitizer_options})
+add_link_options(${sanitizer_options})
+
+# Enable Standard Library assertions
+include(CheckCXXSymbolExists)
+
+if(cxx_std_20 IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+    set(cxx_detect_header version)
+else()
+    set(cxx_detect_header ciso646)
+endif()
+
+check_cxx_symbol_exists(__GLIBCXX__ ${cxx_detect_header} stl_is_libstdcxx)
+check_cxx_symbol_exists(_LIBCPP_VERSION ${cxx_detect_header} stl_is_libcxx)
+check_cxx_symbol_exists(_MSVC_STL_VERSION ${cxx_detect_header} stl_is_msvcstl)
+
+add_compile_definitions($<$<BOOL:${stl_is_libstdcxx}>:_GLIBCXX_ASSERTIONS_>)
+add_compile_definitions($<$<BOOL:${stl_is_msvcstl}>:_CONTAINER_DEBUG_LEVEL>)
+
+# LTO, because why not
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION On)
+
+### Programs
+add_library(lwg
     src/date.cpp src/issues.cpp src/mailing_info.cpp src/metadata.cpp
     src/report_generator.cpp src/sections.cpp src/status.cpp)
 target_sources(lwg PUBLIC FILE_SET headers TYPE HEADERS BASE_DIRS src
@@ -18,22 +43,22 @@ target_sources(lwg PUBLIC FILE_SET headers TYPE HEADERS BASE_DIRS src
 target_compile_features(lwg PUBLIC cxx_std_17)
 
 add_executable(list_issues src/list_issues.cpp)
-target_compile_features(list_issues PRIVATE cxx_std_17)
 target_link_libraries(list_issues lwg)
 
 add_executable(lists src/lists.cpp)
-target_compile_features(lists PRIVATE cxx_std_17)
 target_link_libraries(lists lwg)
 
 add_executable(section_data src/section_data.cpp)
-target_compile_features(section_data PRIVATE cxx_std_17)
+target_link_libraries(section_data lwg)
 
 add_executable(set_status src/set_status.cpp)
-target_compile_features(set_status PRIVATE cxx_std_17)
 target_link_libraries(set_status lwg)
 
 add_executable(toc_diff src/toc_diff.cpp)
-target_compile_features(toc_diff PRIVATE cxx_std_17)
+target_link_libraries(toc_diff lwg)
+
+# Utility targets
+add_custom_target(distclean DEPENDS clean COMMAND cmake -E rm -rf ${mailing_directory})
 
 add_custom_target(pgms DEPENDS lists section_data toc_diff list_issues set_status)
 
