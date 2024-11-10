@@ -20,9 +20,6 @@ jobs:
       with:
         fetch-depth: 1
 
-    - name: Compile binary programs
-      run: make pgms
-
     # This avoids fetching the full git history, because it's slow.
     - name: Extract issue timestamps from published files
       run: |
@@ -35,8 +32,17 @@ jobs:
           date "+$n %s" -d "$date" >> meta-data/dates
         done
 
+    - name: Setup latest cmake and ninja
+      uses: lukka/get-cmake@latest
+
+    - name: Prepare build system
+      run: cmake -B out -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build binary program
+      run: ninja -C out -v lists
+
     - name: Generate HTML lists
-      run: make lists
+      run: ninja -C out -v build_lists
 
     - name: Package changed files
       run: |
