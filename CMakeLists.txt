@@ -78,10 +78,7 @@ add_custom_target(distclean DEPENDS clean COMMAND cmake -E rm -rf ${mailing_dire
 add_custom_target(crlf ! grep -IUrl --exclude-dir=.git . -e '$$\\r'
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_custom_target(lint
-    find xml -name 'issue*.xml' -print0 |
-        xargs -0 -P 16 -n 128 xmllint --noout --nowarning --dtdvalid xml/lwg-issue.dtd
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_custom_target(lint bin/lint.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_custom_target(pgms DEPENDS lists section_data toc_diff list_issues set_status)
 
