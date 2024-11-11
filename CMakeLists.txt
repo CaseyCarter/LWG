@@ -69,16 +69,26 @@ target_link_libraries(set_status lwg)
 add_executable(toc_diff src/toc_diff.cpp)
 target_link_libraries(toc_diff lwg)
 
+file(GLOB issue_files CONFIGURE_DEPENDS xml/issue*.xml)
+add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/meta-data/dates
+    COMMENT "Refreshing 'Last modified' timestamps for issues..."
+    COMMAND git whatchanged --no-show-signature --pretty=%ct | python bin/make_dates.py > meta-data/dates
+    MAIN_DEPENDENCY bin/make_dates.py DEPENDS ${issue_files}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
 ### Utility targets
 add_custom_target(build_lists lists DEPENDS lists mailing
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_custom_target(distclean DEPENDS clean COMMAND cmake -E rm -rf ${mailing_directory})
-
-add_custom_target(crlf ! grep -IUrl --exclude-dir=.git . -e '$$\\r'
+add_custom_target(crlf COMMAND ! grep -IUrl --exclude-dir=.git . -e $$'\\r'
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_custom_target(lint bin/lint.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_custom_target(dates DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/meta-data/dates)
+
+add_custom_target(distclean DEPENDS clean COMMAND cmake -E rm -rf ${mailing_directory})
+
+add_custom_target(lint bash -c bin/lint.sh COMMENT "Validating XML issue files"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_custom_target(pgms DEPENDS lists section_data toc_diff list_issues set_status)
 
