@@ -16,28 +16,35 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-    - name: Compile binary programs
-      run: make pgms
+      - name: Check for carriage returns
+        run: |
+          if grep -IUrl --exclude-dir=.git . -e $'\r'; then
+            echo "Sorry, carriage returns are not allowed in the repo."
+            exit 1
+          fi
 
-    - name: Check for carriage returns
-      run: |
-        if grep -IUrl --exclude-dir=.git . -e $'\r'; then
-          echo "Sorry, carriage returns are not allowed in the repo."
-          exit 1
-        fi
+      - name: Validate XML issue files
+        run: |
+          sudo apt-get install -y libxml2-utils
+          bin/lint.sh
 
-    - name: XML validation
-      run: |
-        sudo apt-get install -y libxml2-utils
-        for i in xml/issue*.xml ; do
-          xmllint --noout --nowarning --dtdvalid xml/lwg-issue.dtd $i
-        done
+      - name: Setup latest cmake and ninja
+        uses: lukka/get-cmake@latest
 
-    - name: Generate HTML lists
-      run: make lists
+      - name: Prepare build system
+        run: cmake -B out -G Ninja -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Compile binary programs
+        run: ninja -C out -v
+
+      - name: Generate HTML lists
+        run: ninja -C out -v build_lists
